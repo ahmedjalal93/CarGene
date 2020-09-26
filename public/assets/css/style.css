@@ -28,7 +28,7 @@
 	transition:box-shadow 2s, width 2s, height 2s;
 }
 
-.navbar-toggler:active, .navbar-toggler:focus + .navbar-collapse {
+.navbar-toggler:hover + .navbar-collapse {
 	display: block !important;
 }
 
