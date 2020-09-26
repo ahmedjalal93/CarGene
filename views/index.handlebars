@@ -1,0 +1,33 @@
+<head>
+  <title>{{title}}</title>
+  {{> main/head }}
+  <script type="module" src="/assets/js/index.js"></script>
+</head>
+
+<body>
+  <header>
+    {{> main/navbar }}
+  </header>
+  <br />
+  <main class="container">
+    <section class="row justify-content-center">
+      <article class="col-auto">
+        <div class="jumbotron">
+          <h1>Welcome to {{title}}</h1><br />
+          <h3>What is Car Gene?</h3>
+          <p>
+            Our focus is on the automotive industry has it's reason.<br />
+            We are dedicated to provide solutions for automotive clients and service providers.<br>
+            We provide services such as professional vehicle inspections, vehicle shipments and repair estimates.
+          </p>
+          <hr />
+          <h3>How does it work?</h3>
+          <p>
+            The was Car Gene works is very unique. We connect you with the right people at the right time<br />
+            You can request a service and next you will be receiving offers for the service to be done<br />
+          </p>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>

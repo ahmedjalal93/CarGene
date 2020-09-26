@@ -1,0 +1,75 @@
+<head>
+  <title>{{title}}</title>
+  {{> main/head }}
+</head>
+<script type="module" src="/assets/js/signup.js"></script>
+<body>
+  <header>
+    {{> main/navbar }}
+  </header>
+  <br />
+  <main class="container">
+    <section class="row justify-content-center">
+      <article class="col-auto" align="center">
+        <div class="jumbotron">
+          <h1>Sign Up</h1>
+          <form id="signup-form" align="left">
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="firstnameInput"><b>First name</b></label>
+                <input type="text" class="form-control" id="firstnameInput" name="firstnameInput" placeholder="Enter first name" maxlength="32" pattern="[a-zA-Z]{1,32}" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="lastnameInput"><b>Last name</b></label>
+                <input type="text" class="form-control" id="lastnameInput" name="lastnameInput" placeholder="Enter last name" maxlength="32" pattern="[a-zA-Z]{1,32}" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="emailInput"><b>Email</b></label>
+                <input id="emailInput" name="emailInput" class="form-control" type="email" placeholder="Enter email" pattern="[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9]{2,8}$" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="passwordInput"><b>Password</b></label>
+                <input id="passwordInput" name="passwordInput" class="form-control" type="password" placeholder="Enter password" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="addressInput"><b>Address</b></label>
+              <input type="text" class="form-control" id="addressInput" name="addressInput" placeholder="Enter address" required />
+            </div>
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="cityInput"><b>City/Town</b></label>
+                <input type="text" class="form-control" id="cityInput" name="cityInput" placeholder="Enter city/town" required />
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="stateInput"><b>State/Province</b></label>
+                <input type="text" class="form-control" id="stateInput" name="stateInput" placeholder="Enter state/provice" required />
+              </div>
+              <div class="col-md-3 mb-3">
+                <label for="zipInput"><b>Zip/Postal</b></label>
+                <input type="text" class="form-control" id="zipInput" name="zipInput" placeholder="Enter zip/postal" pattern="[0-9]{5,8}" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="birthdayInput"><b>Birth date</b></label>
+                <input type="date" class="form-control" id="birthdayInput" name="birthdayInput" minlength="1"
+                pattern="(0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])[- /.](19|20)\d\d" min="1900-01-01" max="2020-12-31" name="date" required />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="phoneInput"><b>Phone number</b></label>
+                <input type="tel" class="form-control" id="phoneInput" name="phoneInput" placeholder="Phone number(you may enter country code)" 
+                pattern="[0-9\+]{0,5}[0-9]{3}[0-9]{3}[0-9]{4}" required />
+              </div>
+            </div>
+            <div id="response" class="alert" role="alert" style="display:none">
+            </div>
+            <button id="signup-submit" class="btn btn-primary" type="submit">Signup</button>
+          </form>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>

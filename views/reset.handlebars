@@ -1,0 +1,30 @@
+<head>
+  <title>{{title}}</title>
+  {{> main/head }}
+  <script type="module" src="/assets/js/reset.js"></script>
+</head>
+
+<body>
+  <header>
+    {{> main/navbar }}
+  </header>
+  <br />
+  <main class="container">
+    <section class="row justify-content-center">
+      <article class="col-auto" align="center">
+        <div class="jumbotron">
+          <h1>Reset password</h1>
+          <form id="reset-form" align="left">
+            <div class="form-group">
+              <label for="password"><b>Password</b></label>
+                <input id="password" name="password" class="form-control" type="password" placeholder="Enter password" minlength="8" required />
+            </div>
+            <div id="response" class="alert" role="alert" style="display:none">
+            </div>
+            <button id="reset-submit" class="btn btn-primary" type="submit">Submit</button>
+          </form>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>

@@ -2,231 +2,141 @@ const db = require("../models");
 const passport = require("../config/passport");
 const crypto = require("crypto");
 const emailer = require("../lib/emailer");
-const router = require("express").Router();
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const multer = require('multer');
 
-cloudinary.config({ 
-  cloud_name: 'ahmedjalal', 
-  api_key: '649491879231561', 
-  api_secret: '5gmhu2qjYDyFmc2eQirh8veaTZY' 
-});
-
-var upload = multer({ storage: new CloudinaryStorage({
-    cloudinary: cloudinary
-  })
-}).single("picture");
-
-// login route
-router.route("/login").post((req, res, next) => {
-  console.log("user data req", req.body)
-  passport.authenticate("local", (err, user, info) => {
-    if (err) {
-      return next(err);
-    }
-    if (user !== false) {
-      req.logIn(user, err => {
-        if (err) {
-          return next(err);
+module.exports = function (app) {
+  // signup route
+  app.post("/api/signup", (req, res) => {
+    const token = crypto.randomBytes(20).toString("hex");
+    db.User.create({
+      name: {
+        first: req.body.firstnameInput,
+        last: req.body.lastnameInput,
+      },
+      email: req.body.emailInput,
+      password: req.body.passwordInput,
+      phone: {
+        number: req.body.phoneInput,
+        verified: false,
+      },
+      birthday: req.body.birthdayInput,
+      address: req.body.addressInput,
+      city: req.body.cityInput,
+      state: req.body.stateInput,
+      zip: req.body.zipInput,
+      active: 0,
+      token: token,
+    })
+      .then((data) => {
+        emailer.sendMail(
+          {
+            from: "Car Gene",
+            to: req.body.emailInput,
+            subject: `Thank you for signing up ${req.body.firstnameInput}, please activate your account`,
+            html: `<h3>Hello ${req.body.firstnameInput},</h3> <br/> Please click on the link below to activate your account.<br/>
+          <a href="http://localhost:8080/activate/${data.id}/${token}">ACTIVATE NOW!</a>`,
+          },
+          (error, info) => {
+            if (error) {
+              console.log(error);
+            } else {
+              console.log("Email sent: " + info.response);
+            }
+          }
+        );
+        res.status(200).json("Successfully signed up");
+      })
+      .catch((err) => {
+        if (err.name === "ValidationError") {
+          const errors = [];
+          Object.keys(err.errors).forEach((key) => {
+            errors.push(err.errors[key].message);
+          });
+          return res.status(400).send(errors);
         }
-        return res.json({
-          id: user.id,
-          email: user.email,
-          message: info.message,
-          success: true
+        res.status(400).json(err);
+      });
+  });
+
+  //login route
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      if (user !== false) {
+        req.logIn(user, (err) => {
+          if (err) {
+            return next(err);
+          }
+          return res.status(200).json(info.message);
         });
-      });
-    } else {
-      console.log("my user", req.user)
-      return res.json({
-        message: info.message,
-        success: false
-      });
-    }
-  })(req, res, next);
-});
-
-// signup route
-router.route('/signup').post(upload, (req, res) => {
-  const token = crypto.randomBytes(20).toString("hex");
-  db.User.create({
-    email: req.body.email,
-    password: req.body.password,
-    name: req.body.name,
-    phone: req.body.phone,
-    bio: req.body.bio,
-    picture: req.file.path,
-    active: 0,
-    token: token
-  })
-    .then(data => {
-      emailer.sendMail(
-        {
-          from: "Recipe Index",
-          to: req.body.email,
-          subject:
-            "Thank you for signing up " +
-            req.body.name +
-            ", please activate your account",
-          html: `Hello ${req.body.name}, <br/> Please click on the link below to activate your account.<br/>
-          <a href="https://recipique.herokuapp.com/activate/${data.id}/${token}">ACTIVATE NOW!</a>`
-        },
-        (error, info) => {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
-        }
-      );
-      return res.status(200).json(data);
-    })
-    .catch(err => {
-      return res.status(401).json(err);
-    });
-});
-
-// logout route
-router.route("/logout").get((req, res) => {
-  req.logout();
-  res.json(true)
-});
-
-//reset password
-router.route("/reset/send").put((req, res) => {
-  const token = crypto.randomBytes(20).toString("hex");
-  db.User.findOne({ where: { email: req.body.email.trim() } })
-    .then(data => {
-      db.User.update(
-        {
-          token: token
-        },
-        { where: { id: data.id } }
-      );
-      emailer.sendMail(
-        {
-          from: "Recipe Index",
-          to: data.email,
-          subject:
-            "Your reset password form " +
-            data.name +
-            ", this is your reset password form",
-          html: `Hello ${data.name}, <br/> Please click on the link below to reset your password.<br/>
-          <a href="https://localhost:8080/reset/${data.id}/${token}">RESET NOW!</a>`
-        },
-        (error, info) => {
-          if (error) {
-            console.log(error);
-          } else {
-            console.log("Email sent: " + info.response);
-          }
-        }
-      );
-      res.json(data);
-    })
-    .catch(err => {
-      res.status(401).json(err);
-    });
-});
-
-router.route("/reset/password").put((req, res) => {
-  db.User.findOne({ where: { id: Number(req.body.id) } })
-    .then(data => {
-      if (req.body.token === data.token) {
-        db.User.update(
-          {
-            password: req.body.password,
-            token: null
-          },
-          { where: { id: data.id } }
-        );
-        return res.json(true);
-      }
-      return res.json(false);
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(401).json(err);
-    });
-});
-
-router.route("/activate/:id/:token").get((req, res) => {
-  db.User.findOne({ where: { id: Number(req.params.id) } }).then(data => {
-    const response = {};
-    if (data !== null) {
-      if (req.params.token === data.token) {
-        db.User.update(
-          {
-            active: 1,
-            token: null
-          },
-          { where: { id: data.id } }
-        );
-        response.code = 1;
-        response.message = "Your account was successfuly activated";
       } else {
-        response.code = 0;
-        response.message = "Something went wrong while activating your account, please check your link";
+        return res.status(401).json(info.message);
       }
-    } else {
-      response.code = 0;
-      response.message = "Something went wrong while activating your account, please check your link";
-    }
-    return res.json(response);
-  });
-});
-
-router.route("/authenticate").get((req, res) => {
-  if (req.user) {
-    return res.json(req.user)
-  }
-  return res.json(false)
-});
-
-router.route("/profile/:id?").get((req, res) => {
-  db.User.findOne({ where: { id: Number(req.params.id) } }).then(data => {
-    res.json(data);
-  }).catch(err => res.json(err));
-});
-
-router.route("/viewrecipe/:id?").get((req, res) => {
-  db.Recipe.findOne({ 
-    where: { 
-      id: Number(req.params.id) 
-    },
-    include: db.User
-  }).then(data => {
-    console.log("my user data", data.User);
-    res.json(data);
-  }).catch(err => res.json(err));
-});
-
-router.route("/addrecipe").post(upload, (req, res) => {
-  console.log("add ", req.body, " file ", req.file)
-  db.Recipe.create({
-    name: req.body.name,
-    UserId: req.body.author,
-    category: req.body.category,
-    ingredients: req.body.ingredients,
-    steps: req.body.steps,
-    time: req.body.time,
-    picture: req.file.path,
-    visility: req.body.visility
-  }).then(data => {
-    res.json(data);
+    })(req, res, next);
   });
 
-  router.route("/addcomment").post((req, res) => {
-    console.log("add comment ", req.body)
-    db.Comment.create({
-      comment: req.body.comment,
-      RecipeId: req.body.recipeId,
-    }).then(data => {
-      res.json(data);
-    });
-  })
-})
+  //forgot password
+  app.put("/api/forgot", (req, res) => {
+    const token = crypto.randomBytes(20).toString("hex");
+    db.User.findOne({ where: { email: req.body.email.trim() } })
+      .then((data) => {
+        if (data) {
+          db.User.update(
+            {
+              token: token,
+            },
+            { where: { id: data.id } }
+          );
+          emailer.sendMail(
+            {
+              from: "Car Gene",
+              to: data.email,
+              subject: `Your reset password form ${data.firstname}, this is your reset password form`,
+              html: `<h3>Hello ${data.firstname},</h3> <br/> Please click on the link below to reset your password.<br/>
+              <a href="http://localhost:8080/reset/${data.id}/${token}">RESET NOW!</a>`,
+            },
+            (error, info) => {
+              if (error) {
+                console.log(error);
+              } else {
+                console.log("Email sent: " + info.response);
+              }
+            }
+          );
+          return res.status(200).json("Reset password email sent!");
+        }
+        return res.status(401).json("Email not found");
+      })
+      .catch((err) => {
+        console.log("Error: ", err);
+        return res.status(401).json("Server error");
+      });
+  });
 
-
-module.exports = router;
+  //reset route
+  app.put("/api/reset", (req, res) => {
+    db.User.findOne({ where: { id: req.body.id } })
+      .then((data) => {
+        if (data) {
+          if (req.body.token === data.token) {
+            db.User.update(
+              {
+                password: req.body.password,
+                token: null,
+              },
+              { where: { id: data.id } }
+            );
+            return res.status(200).json("Password was reset!");
+          }
+        }
+        return res
+          .status(401)
+          .json("Something went wrong, please check you reset link");
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(401).json(err);
+      });
+  });
+};

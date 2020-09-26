@@ -1,34 +1,38 @@
 const express = require("express");
 const session = require("express-session");
+const handlebars = require("express-handlebars");
 const passport = require("./config/passport");
-
-const routes = require("./routes");
-const app = express();
+const mongoose = require("mongoose");
+//const compression = require("compression");
 const PORT = process.env.PORT || 8080;
-const db = require("./models");
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(
-  session({ 
-    secret: "Hamoody", 
-    name: 'session',
-    resave: false, 
-    saveUninitialized: true
-  })
-);
-
+const app = express();
+app.use(express.static("public"));
+app.use(session({ secret: "Hamoody", resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static("client/build"));
-}
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-app.use(routes);
+app.engine(
+  "handlebars",
+  handlebars({
+    defaultLayout: "main",
+    helpers: require("./lib/handlebars-helpers"),
+  })
+);
+app.set("view engine", "handlebars");
 
-db.sequelize.sync().then(() => {
-  app.listen(PORT, function() {
-    console.log(`🌎  ==> API Server now listening on PORT ${PORT}!`);
-  });
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/cargene";
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useFindAndModify: false,
+});
+
+require("./routes/html-routes.js")(app);
+require("./routes/api-routes.js")(app);
+
+app.listen(PORT, () => {
+  console.log(`App running on port ${PORT}!`);
 });
